@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aa-ar/budgeter-service/internal/handler"
 	"github.com/aa-ar/budgeter-service/internal/logger"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -29,12 +30,21 @@ func (svc *Service) Port() string {
 	return fmt.Sprintf(":%d", svc.port)
 }
 
-func (svc *Service) Setup() {
+func (svc *Service) Registries(registries []Registry) *Service {
+	for _, registry := range registries {
+		for _, h := range registry.Handlers() {
+			svc.router.Handle(h.Path(), handler.Handler(h.Handler)).Methods(h.Methods()...)
+		}
+	}
+	return svc
+}
+
+func (svc *Service) setup() {
 	svc.setupHandlers()
 	svc.setupMiddlewares()
 }
 
 func (svc *Service) Start() {
-	svc.Setup()
+	svc.setup()
 	http.ListenAndServe(svc.Port(), svc.middleware)
 }

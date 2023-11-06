@@ -3,6 +3,7 @@ package response
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -18,14 +19,14 @@ type errorBody struct {
 }
 
 func New(status int, body interface{}, cookies []*http.Cookie) *Response {
-	err := body.(error)
-	if err != nil {
-		body = errorBody{
-			Error:   err.Error(),
-			Details: err,
+	if err, ok := body.(error); ok {
+		if err != nil {
+			body = errorBody{
+				Error:   err.Error(),
+				Details: err,
+			}
 		}
 	}
-
 	return &Response{
 		Status:  status,
 		Body:    body,
@@ -36,13 +37,20 @@ func New(status int, body interface{}, cookies []*http.Cookie) *Response {
 func (r *Response) Marshal() []byte {
 	j, err := json.Marshal(r.Body)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return j
 }
 
+func (r *Response) SetCookies(w http.ResponseWriter) {
+	for _, cookie := range r.Cookies {
+		http.SetCookie(w, cookie)
+	}
+}
+
 func (r *Response) WriteTo(w http.ResponseWriter) {
 	j := r.Marshal()
+	r.SetCookies(w)
 	w.WriteHeader(int(r.Status))
 	fmt.Fprint(w, string(j))
 }
