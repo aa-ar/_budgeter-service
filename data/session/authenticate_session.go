@@ -7,7 +7,9 @@ import (
 )
 
 func (d SessionDataSource) AuthenticateSession(userID ksuid.KSUID, sess *model.Session) error {
-	sess.Data["UserID"] = userID.String()
+	if sess.Data["UserID"] == "" {
+		sess.Data["UserID"] = userID.String()
+	}
 	sess.Data["Authenticated"] = "1"
 	if err := d.Client.HSet(d.ctx, sess.ID.String(), sess.Data).Err(); err != nil {
 		logrus.Error(err)

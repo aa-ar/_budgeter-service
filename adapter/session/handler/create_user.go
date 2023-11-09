@@ -2,13 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/aa-ar/budgeter-service/adapter/session/errors"
 	"github.com/aa-ar/budgeter-service/domain/model"
 	"github.com/aa-ar/budgeter-service/internal/response"
 	"github.com/aa-ar/budgeter-service/internal/svcerror"
+	"github.com/sirupsen/logrus"
 )
 
 type CreateUserHandler struct {
@@ -42,7 +42,7 @@ func (h *CreateUserHandler) Handler(w http.ResponseWriter, r *http.Request) erro
 	var req *createUserRequest
 	err := body.Decode(&req)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 		return svcerror.BadRequestError{}
 	}
 

@@ -1,10 +1,9 @@
 package budgeter
 
 import (
-	"log"
-
 	"github.com/Masterminds/squirrel"
 	"github.com/aa-ar/budgeter-service/domain/model"
+	"github.com/sirupsen/logrus"
 )
 
 func (d BudgeterDataSource) FindUserByEmail(email string) (*model.User, error) {
@@ -20,18 +19,18 @@ func (d BudgeterDataSource) FindUserByEmail(email string) (*model.User, error) {
 		PlaceholderFormat(squirrel.Dollar).
 		ToSql()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 		return nil, err
 	}
 	rows, err := d.DB.Queryx(sql, args...)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 		return nil, err
 	}
 	for rows.Next() {
 		err := rows.StructScan(&user)
 		if err != nil {
-			log.Fatal(err)
+			logrus.Error(err)
 			return nil, err
 		}
 	}

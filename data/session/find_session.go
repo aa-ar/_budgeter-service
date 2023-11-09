@@ -19,6 +19,10 @@ func (d SessionDataSource) FindSession(sessionID ksuid.KSUID) (*model.Session, e
 		return nil, err
 	}
 
+	if len(res) == 0 {
+		return nil, nil
+	}
+
 	return &model.Session{
 		ID:   sessionID,
 		Data: res,

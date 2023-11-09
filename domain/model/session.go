@@ -1,12 +1,12 @@
 package model
 
 import (
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/aa-ar/budgeter-service/errors"
 	"github.com/segmentio/ksuid"
+	"github.com/sirupsen/logrus"
 )
 
 const COOKIE_NAME = "session"
@@ -38,12 +38,12 @@ func (sess *Session) GetDatum(key string) string {
 func (sess *Session) FromRequest(req *http.Request) (*Session, error) {
 	cookie, err := req.Cookie(COOKIE_NAME)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 		return nil, errors.NoSessionCookieError{}
 	}
 	sessionID, err := ksuid.Parse(cookie.Value)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 		return sess, errors.BadSessionTokenError{}
 	}
 	sess.ID = sessionID

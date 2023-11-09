@@ -3,8 +3,9 @@ package response
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Response struct {
@@ -37,7 +38,7 @@ func New(status int, body interface{}, cookies []*http.Cookie) *Response {
 func (r *Response) Marshal() []byte {
 	j, err := json.Marshal(r.Body)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
 	}
 	return j
 }

@@ -40,9 +40,11 @@ func NewCreateUserUsecase(s findSessionDataSource, b createUserDataSource, p cre
 func (u *CreateUserUsecase) CreateUser(sess *model.Session, pwd string) (*response.Response, error) {
 	sess, err := u.findSessionDataSource.FindSession(sess.ID)
 	if err != nil {
-		// TODO: improve this error, if we can't find the session, it's probably
-		// expired, and we have to let the client know that
 		return nil, svcerror.InternalServerError{}
+	}
+
+	if sess == nil {
+		return nil, errors.EmptySessionError{}
 	}
 
 	userID := sess.GetDatum("UserID")

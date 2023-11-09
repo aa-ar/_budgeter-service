@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/aa-ar/budgeter-service/internal/handler"
-	"github.com/aa-ar/budgeter-service/internal/logger"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 )
@@ -14,7 +13,6 @@ type Service struct {
 	port       int
 	router     *mux.Router
 	middleware *negroni.Negroni
-	logger     *logger.Logger
 }
 
 func NewService(port int) *Service {
@@ -22,7 +20,6 @@ func NewService(port int) *Service {
 		port:       port,
 		router:     mux.NewRouter(),
 		middleware: negroni.New(),
-		logger:     logger.New(),
 	}
 }
 
