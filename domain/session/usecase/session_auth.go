@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/aa-ar/budgeter-service/domain/model"
+	"github.com/aa-ar/budgeter-service/domain/session/datasource"
 	"github.com/aa-ar/budgeter-service/errors"
 	"github.com/aa-ar/budgeter-service/internal/response"
 	"github.com/aa-ar/budgeter-service/internal/svcerror"
@@ -10,34 +11,25 @@ import (
 )
 
 type SessionAuthUsecase struct {
-	sessionAuthenticatorDataSource
-	hashComparerDataSource
-	presenter sessionAuthPresenter
-}
-
-type sessionAuthenticatorDataSource interface {
-	FindSession(ksuid.KSUID) (*model.Session, error)
-	AuthenticateSession(ksuid.KSUID, *model.Session) error
-}
-
-type hashComparerDataSource interface {
-	CompareHashesForUser(ksuid.KSUID, string) error
+	sessionDataSource  datasource.SessionDataSource
+	budgeterDataSource datasource.BudgeterDataSource
+	presenter          sessionAuthPresenter
 }
 
 type sessionAuthPresenter interface {
 	PrepareResponse(*model.Session) *response.Response
 }
 
-func NewSessionAuthUsecase(s sessionAuthenticatorDataSource, b hashComparerDataSource, p sessionAuthPresenter) *SessionAuthUsecase {
+func NewSessionAuthUsecase(s datasource.SessionDataSource, b datasource.BudgeterDataSource, p sessionAuthPresenter) *SessionAuthUsecase {
 	return &SessionAuthUsecase{
-		sessionAuthenticatorDataSource: s,
-		hashComparerDataSource:         b,
-		presenter:                      p,
+		sessionDataSource:  s,
+		budgeterDataSource: b,
+		presenter:          p,
 	}
 }
 
 func (u *SessionAuthUsecase) AuthenticateSession(sess *model.Session, pwd string) (*response.Response, error) {
-	sess, err := u.sessionAuthenticatorDataSource.FindSession(sess.ID)
+	sess, err := u.sessionDataSource.FindSession(sess.ID)
 	if err != nil {
 		return nil, svcerror.InternalServerError{}
 	}
@@ -56,11 +48,11 @@ func (u *SessionAuthUsecase) AuthenticateSession(sess *model.Session, pwd string
 		return nil, svcerror.InternalServerError{}
 	}
 
-	if err = u.hashComparerDataSource.CompareHashesForUser(userID, pwd); err != nil {
+	if err = u.budgeterDataSource.CompareHashesForUser(userID, pwd); err != nil {
 		return nil, errors.InvalidPasswordError{}
 	}
 
-	if err := u.sessionAuthenticatorDataSource.AuthenticateSession(userID, sess); err != nil {
+	if err := u.sessionDataSource.AuthenticateSession(userID, sess); err != nil {
 		logrus.Error(err)
 		return nil, svcerror.InternalServerError{}
 	}

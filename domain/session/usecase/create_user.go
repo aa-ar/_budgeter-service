@@ -2,43 +2,33 @@ package usecase
 
 import (
 	"github.com/aa-ar/budgeter-service/domain/model"
+	"github.com/aa-ar/budgeter-service/domain/session/datasource"
 	"github.com/aa-ar/budgeter-service/errors"
 	"github.com/aa-ar/budgeter-service/internal/response"
 	"github.com/aa-ar/budgeter-service/internal/svcerror"
-	"github.com/segmentio/ksuid"
 	"github.com/sirupsen/logrus"
 )
 
 type CreateUserUsecase struct {
-	findSessionDataSource
-	createUserDataSource
-	presenter createUserPresenter
-}
-
-type findSessionDataSource interface {
-	FindSession(ksuid.KSUID) (*model.Session, error)
-	AuthenticateSession(ksuid.KSUID, *model.Session) error
-	ClearSessionToken(ksuid.KSUID) error
-}
-
-type createUserDataSource interface {
-	InsertWorkspaceAndUser(*model.User) (*model.User, error)
+	sessionDataSource  datasource.SessionDataSource
+	budgeterDataSource datasource.BudgeterDataSource
+	presenter          createUserPresenter
 }
 
 type createUserPresenter interface {
 	PrepareResponse(*model.User) *response.Response
 }
 
-func NewCreateUserUsecase(s findSessionDataSource, b createUserDataSource, p createUserPresenter) *CreateUserUsecase {
+func NewCreateUserUsecase(s datasource.SessionDataSource, b datasource.BudgeterDataSource, p createUserPresenter) *CreateUserUsecase {
 	return &CreateUserUsecase{
-		findSessionDataSource: s,
-		createUserDataSource:  b,
-		presenter:             p,
+		sessionDataSource:  s,
+		budgeterDataSource: b,
+		presenter:          p,
 	}
 }
 
 func (u *CreateUserUsecase) CreateUser(sess *model.Session, pwd string) (*response.Response, error) {
-	sess, err := u.findSessionDataSource.FindSession(sess.ID)
+	sess, err := u.sessionDataSource.FindSession(sess.ID)
 	if err != nil {
 		return nil, svcerror.InternalServerError{}
 	}
@@ -63,14 +53,14 @@ func (u *CreateUserUsecase) CreateUser(sess *model.Session, pwd string) (*respon
 		return nil, svcerror.InternalServerError{}
 	}
 
-	persistedUser, err := u.createUserDataSource.InsertWorkspaceAndUser(user)
+	persistedUser, err := u.budgeterDataSource.InsertWorkspaceAndUser(user)
 	if err != nil {
 		logrus.Error(err)
 		return nil, svcerror.InternalServerError{}
 	}
 
-	if err := u.findSessionDataSource.AuthenticateSession(persistedUser.ID, sess); err != nil {
-		u.findSessionDataSource.ClearSessionToken(sess.ID)
+	if err := u.sessionDataSource.AuthenticateSession(persistedUser.ID, sess); err != nil {
+		u.sessionDataSource.ClearSessionToken(sess.ID)
 	}
 
 	return u.presenter.PrepareResponse(persistedUser), nil
