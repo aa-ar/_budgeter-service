@@ -27,7 +27,7 @@ func (svc *Service) Port() string {
 	return fmt.Sprintf(":%d", svc.port)
 }
 
-func (svc *Service) Registries(registries []Registry) *Service {
+func (svc *Service) AttachRegistries(registries []Registry) *Service {
 	for _, registry := range registries {
 		for _, h := range registry.Handlers() {
 			svc.router.Handle(h.Path(), handler.Handler(h.Handler)).Methods(h.Methods()...)

@@ -5,9 +5,9 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/aa-ar/budgeter-service/data/budgeter"
-	"github.com/aa-ar/budgeter-service/data/session"
-	sessionRegistry "github.com/aa-ar/budgeter-service/domain/session/registry"
+	budgeterDataSource "github.com/aa-ar/budgeter-service/data/budgeter"
+	sessionDataSource "github.com/aa-ar/budgeter-service/data/session"
+	session "github.com/aa-ar/budgeter-service/domain/session/registry"
 	"github.com/aa-ar/budgeter-service/internal/data/pg"
 	"github.com/aa-ar/budgeter-service/internal/data/redis"
 	"github.com/aa-ar/budgeter-service/internal/service"
@@ -16,14 +16,14 @@ import (
 var registries []service.Registry
 
 func init() {
-	sessionDataSource := session.NewSessionDataSource(
+	sessionDataSource := sessionDataSource.NewSessionDataSource(
 		&redis.Config{
 			Addr:     os.Getenv("RDB_ADDR"),
 			Password: os.Getenv("RDB_PWD"),
 		},
 	)
 
-	budgeterDataSource := budgeter.NewBudgeterDataSource(&pg.Config{
+	budgeterDataSource := budgeterDataSource.NewBudgeterDataSource(&pg.Config{
 		Host:     os.Getenv("PG_HOST"),
 		Port:     os.Getenv("PG_PORT"),
 		Password: os.Getenv("PG_PWD"),
@@ -33,12 +33,12 @@ func init() {
 	})
 
 	registries = []service.Registry{
-		sessionRegistry.NewSessionRegistry(*sessionDataSource, *budgeterDataSource),
+		session.NewSessionRegistry(*sessionDataSource, *budgeterDataSource),
 	}
 }
 
 func main() {
 	service.NewService(3030).
-		Registries(registries).
+		AttachRegistries(registries).
 		Start()
 }
