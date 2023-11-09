@@ -6,16 +6,16 @@ import (
 )
 
 type SessionInitUsecase struct {
-	sessionDataSource
-	budgeterDataSource
+	saveSessionDataSource
+	findUserDataSource
 	presenter sessionInitPresenter
 }
 
-type sessionDataSource interface {
-	SaveSession(*model.Session) error
+type saveSessionDataSource interface {
+	SaveTempSession(*model.Session) error
 }
 
-type budgeterDataSource interface {
+type findUserDataSource interface {
 	FindUserByEmail(string) (*model.User, error)
 }
 
@@ -23,11 +23,11 @@ type sessionInitPresenter interface {
 	PrepareResponse(*model.Session) *response.Response
 }
 
-func NewSessionInitUsecase(s sessionDataSource, b budgeterDataSource, p sessionInitPresenter) *SessionInitUsecase {
+func NewSessionInitUsecase(s saveSessionDataSource, b findUserDataSource, p sessionInitPresenter) *SessionInitUsecase {
 	return &SessionInitUsecase{
-		sessionDataSource:  s,
-		budgeterDataSource: b,
-		presenter:          p,
+		saveSessionDataSource: s,
+		findUserDataSource:    b,
+		presenter:             p,
 	}
 }
 
@@ -37,7 +37,7 @@ func (u *SessionInitUsecase) InitializeSession(email string) (*response.Response
 		"Authenticated": "0",
 	}
 
-	user, err := u.budgeterDataSource.FindUserByEmail(email)
+	user, err := u.findUserDataSource.FindUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (u *SessionInitUsecase) InitializeSession(email string) (*response.Response
 	}
 
 	sess := model.NewSession().SetData(data)
-	err = u.sessionDataSource.SaveSession(sess)
+	err = u.saveSessionDataSource.SaveTempSession(sess)
 	if err != nil {
 		return nil, err
 	}

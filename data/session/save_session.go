@@ -2,7 +2,7 @@ package session
 
 import "github.com/aa-ar/budgeter-service/domain/model"
 
-func (d SessionDataSource) SaveSession(sess *model.Session) error {
+func (d SessionDataSource) SaveTempSession(sess *model.Session) error {
 	err := d.Client.HSet(d.ctx, sess.ID.String(), sess.Data).Err()
 	if err != nil {
 		return err

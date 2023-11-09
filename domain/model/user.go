@@ -1,8 +1,7 @@
 package model
 
 import (
-	"errors"
-
+	"github.com/aa-ar/budgeter-service/errors"
 	"github.com/segmentio/ksuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,9 +17,9 @@ type User struct {
 
 func NewUser(email string) (*User, error) {
 	if email == "" {
-		return nil, errors.New("email cannot be empty")
+		return nil, errors.UserEmailCannotBeEmptyError{}
 	}
-	return &User{Email: email}, nil
+	return &User{ID: ksuid.New(), Email: email}, nil
 }
 
 func (user *User) HashPassword(password string) error {

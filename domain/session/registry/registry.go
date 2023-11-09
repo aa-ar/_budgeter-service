@@ -17,6 +17,7 @@ func NewSessionRegistry(s session.SessionDataSource, b budgeter.BudgeterDataSour
 	return &Registry{
 		handlers: []service.Handler{
 			handler.NewSessionInitHandler(usecase.NewSessionInitUsecase(s, b, presenter.NewSessionInitPresenter())),
+			handler.NewCreateUserHandler(usecase.NewCreateUserUsecase(s, b, presenter.NewCreateUserPresenter())),
 		},
 	}
 }
